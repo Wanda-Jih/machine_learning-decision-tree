@@ -19,7 +19,7 @@ Use 10-fold cross validation to evaluate the models.
 2. Execute `trees.py`
 * Build decision trees
     1. Execute `python .\trees.py trainingSet.csv testSet.csv 1`
-      * You can choose {1, 2, 3} for the last parameter.
+      1. You can choose {1, 2, 3} for the last parameter.
     2. Output: 
         cv_depth.jpg
         
