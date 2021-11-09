@@ -10,7 +10,7 @@ def read_data(input_path):
     
     data = pd.read_csv(input_path)
     data = data.sample(random_state = 18, frac = 1)
-    data = data.sample(random_state = 32, frac = 0.5)
+    # data = data.sample(random_state = 32, frac = 0.5)
     return data    
 
 def build_folder(train_data, folder_num):
@@ -23,13 +23,14 @@ def build_folder(train_data, folder_num):
     
     return folder_list
    
-def build_trainingset(data_list, index):
+def build_trainingset(data_list, index, t_frac):
     temp_row = []
     for i, row in enumerate(data_list):
         if i == index:
             continue
         temp_row.append(row)
     training_set = pd.concat(temp_row)
+    training_set = training_set.sample(random_state = 32, frac = t_frac)
     return training_set
 
 
@@ -217,9 +218,10 @@ if __name__ == '__main__':
         
     train_data = read_data(input_path)
     
-    depth = [3, 5, 7, 9]
+    t_frac = [0.05, 0.075, 0.1, 0.15, 0.2]
     folder_num = 10
     min_children = 50
+    max_depth = 8
     trees_num = 30
     
     data_list = build_folder(train_data, folder_num)
@@ -230,14 +232,14 @@ if __name__ == '__main__':
     RF_data = []    
 
     
-    for max_depth in depth:
+    for t in t_frac:
         DT_record = []
         BT_record = []
         RF_record = []
         
         for i in range(folder_num):
             test_set = data_list[i]
-            training_set = build_trainingset(data_list, i)
+            training_set = build_trainingset(data_list, i, t)
             
             # decision tree
             trainAcc, testAcc = decisionTree(training_set, test_set, max_depth, min_children)
@@ -272,9 +274,9 @@ if __name__ == '__main__':
         RF_data.append([max_depth, RF_mean, RF_sterr])
         
         #Save tmp result
-        np.savetxt("tmp_result/DT_record_depth.txt",np.array(DT_data))
-        np.savetxt("tmp_result/bt_record_depth.txt", np.array(BT_data))
-        np.savetxt("tmp_result/rf_record_depth.txt", np.array(RF_data))
+        np.savetxt("tmp_result/DT_record_frac.txt",np.array(DT_data))
+        np.savetxt("tmp_result/bt_record_frac.txt", np.array(BT_data))
+        np.savetxt("tmp_result/rf_record_fracc.txt", np.array(RF_data))
     
 
 
@@ -284,11 +286,11 @@ if __name__ == '__main__':
     BT_data = np.array(BT_data)
     RF_data = np.array(RF_data)
 
-    plt.errorbar(depth, DT_data[:, 1], yerr=DT_data[:, 2], label='Decision Tree')
-    plt.errorbar(depth, BT_data[:, 1], yerr=BT_data[:, 2], label='Bagging Tree')
-    plt.errorbar(depth, RF_data[:, 1], yerr=RF_data[:, 2], label='Random Forest')
-    plt.xlabel('Tree max_depth')
+    plt.errorbar(t_frac, DT_data[:, 1], yerr=DT_data[:, 2], label='Decision Tree')
+    plt.errorbar(t_frac, BT_data[:, 1], yerr=BT_data[:, 2], label='Bagging Tree')
+    plt.errorbar(t_frac, RF_data[:, 1], yerr=RF_data[:, 2], label='Random Forest')
+    plt.xlabel('Training fraction')
     plt.ylabel('Accuracy')
     plt.legend()
-    plt.savefig('cv_depth.jpg')
+    plt.savefig('cv_frac.jpg')
         

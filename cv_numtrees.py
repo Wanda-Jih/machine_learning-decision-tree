@@ -146,12 +146,12 @@ def find_decision_from_tree(row, tree_dict):
             return find_decision_from_tree(row, decide_dict)
   
  
-def bagging(train_data, test_data, max_depth, min_children):
+def bagging(train_data, test_data, max_depth, min_children, trees_num):
  
     tree_list = []
     feature_list = list(train_data.columns)
     
-    for i in range(30):
+    for i in range(trees_num):
         data = train_data.sample(frac = 1, replace = True)
         tmp_dict = buildTree(data, feature_list, max_depth, min_children)
         tree_list.append(tmp_dict)
@@ -185,11 +185,11 @@ def evaluate_BT(data, tree_list):
     return count / len(data)
 
 
-def randomForests(train_data, test_data, max_depth, min_children):
+def randomForests(train_data, test_data, max_depth, min_children, trees_num):
  
     tree_list = []
     
-    for i in range(30):
+    for i in range(trees_num):
         # collect row
         data = train_data.sample(frac = 0.5, replace = True)
         
@@ -217,21 +217,21 @@ if __name__ == '__main__':
         
     train_data = read_data(input_path)
     
-    depth = [3, 5, 7, 9]
+    max_depth = 8
     folder_num = 10
     min_children = 50
-    trees_num = 30
+    trees_num_list = [10, 20, 40, 50]
     
     data_list = build_folder(train_data, folder_num)
 
 
-    DT_data = []
+    # DT_data = []
     BT_data = []
     RF_data = []    
 
     
-    for max_depth in depth:
-        DT_record = []
+    for trees_num in trees_num_list:
+        # DT_record = []
         BT_record = []
         RF_record = []
         
@@ -239,16 +239,16 @@ if __name__ == '__main__':
             test_set = data_list[i]
             training_set = build_trainingset(data_list, i)
             
-            # decision tree
-            trainAcc, testAcc = decisionTree(training_set, test_set, max_depth, min_children)
-            DT_record.append(testAcc)
+            # # decision tree
+            # trainAcc, testAcc = decisionTree(training_set, test_set, max_depth, min_children)
+            # DT_record.append(testAcc)
             
             # bagging
-            trainAcc, testAcc = bagging(training_set, test_set, max_depth, min_children)
+            trainAcc, testAcc = bagging(training_set, test_set, max_depth, min_children, trees_num)
             BT_record.append(testAcc)        
             
             # random forest
-            trainAcc, testAcc = randomForests(training_set, test_set, max_depth, min_children)
+            trainAcc, testAcc = randomForests(training_set, test_set, max_depth, min_children, trees_num)
             RF_record.append(testAcc)   
          
         result = stats.ttest_rel(RF_record, BT_record)
@@ -256,10 +256,10 @@ if __name__ == '__main__':
         
 
         #Here append the mean_accu and err
-        DT_mean=np.mean(DT_record)
-        DT_Var=np.var(DT_record)
-        DT_sterr=np.sqrt(DT_Var)/np.sqrt(folder_num)
-        DT_data.append([max_depth,DT_mean,DT_sterr])
+        # DT_mean=np.mean(DT_record)
+        # DT_Var=np.var(DT_record)
+        # DT_sterr=np.sqrt(DT_Var)/np.sqrt(folder_num)
+        # DT_data.append([max_depth,DT_mean,DT_sterr])
 
         BT_mean = np.mean(BT_record)
         BT_Var = np.var(BT_record)
@@ -272,23 +272,23 @@ if __name__ == '__main__':
         RF_data.append([max_depth, RF_mean, RF_sterr])
         
         #Save tmp result
-        np.savetxt("tmp_result/DT_record_depth.txt",np.array(DT_data))
-        np.savetxt("tmp_result/bt_record_depth.txt", np.array(BT_data))
-        np.savetxt("tmp_result/rf_record_depth.txt", np.array(RF_data))
+        # np.savetxt("tmp_result/DT_record_tree_num.txt",np.array(DT_data))
+        np.savetxt("tmp_result/bt_record_tree_num.txt", np.array(BT_data))
+        np.savetxt("tmp_result/rf_record_tree_num.txt", np.array(RF_data))
     
 
 
 
     # Plot the result
-    DT_data = np.array(DT_data)
+    # DT_data = np.array(DT_data)
     BT_data = np.array(BT_data)
     RF_data = np.array(RF_data)
 
-    plt.errorbar(depth, DT_data[:, 1], yerr=DT_data[:, 2], label='Decision Tree')
-    plt.errorbar(depth, BT_data[:, 1], yerr=BT_data[:, 2], label='Bagging Tree')
-    plt.errorbar(depth, RF_data[:, 1], yerr=RF_data[:, 2], label='Random Forest')
+    # plt.errorbar(trees_num_list, DT_data[:, 1], yerr=DT_data[:, 2], label='Decision Tree')
+    plt.errorbar(trees_num_list, BT_data[:, 1], yerr=BT_data[:, 2], label='Bagging Tree')
+    plt.errorbar(trees_num_list, RF_data[:, 1], yerr=RF_data[:, 2], label='Random Forest')
     plt.xlabel('Tree max_depth')
     plt.ylabel('Accuracy')
     plt.legend()
-    plt.savefig('cv_depth.jpg')
+    plt.savefig('cv_num.jpg')
         
